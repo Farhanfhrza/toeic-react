@@ -41,10 +41,10 @@ export default function ReadingList() {
                             className="p-4 border rounded-lg shadow-sm bg-white cursor-pointer hover:bg-gray-100 transition duration-150"
                         >
                             <MateriCard
-                            title={item.title}
-                            description={item.content_text}
-                            // isDone={materi.isDone}
-                        />
+                                title={item.title}
+                                description={item.content_text}
+                                progress={item.progress}
+                            />
                         </div>
                     ))}
                 </div>

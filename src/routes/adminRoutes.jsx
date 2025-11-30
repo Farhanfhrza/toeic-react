@@ -3,10 +3,11 @@ import { Navigate } from "react-router-dom";
 import PrivateRoute from "../components/privateRoute";
 import AdminLayout from "../layouts/AdminLayout";
 import Dashboard from "../pages/admin/Dashboard";
+import ManageClasses from "../pages/admin/ManageClasses";
+import ManageMaterials from "../pages/admin/ManageMaterials";
 import ManageQuestions from "../pages/admin/ManageQuestions";
-import ManageQuizzes from "../pages/admin/ManageQuizzes";
 const ManageUsers = lazy(() => import("../pages/admin/ManageUsers"));
-import ViewResults from "../pages/admin/ViewResults";
+// import ViewResults from "../pages/admin/ViewResults";
 
 export const adminRoutes = {
     path: "/admin",
@@ -18,8 +19,9 @@ export const adminRoutes = {
     children: [
         { index: true, element: <Dashboard /> },
         { path: "users", element: <ManageUsers /> },
-        { path: "quizzes", element: <ManageQuestions /> },
-        { path: "questions", element: <ManageQuizzes /> },
-        { path: "results", element: <ViewResults /> },
+        { path: "classes", element: <ManageClasses /> },
+        { path: "materials", element: <ManageMaterials /> },
+        { path: "questions", element: <ManageQuestions /> },
+        // { path: "results", element: <ViewResults /> },
     ],
 };

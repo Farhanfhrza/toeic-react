@@ -1,52 +1,70 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { Home, BookText, AudioLines, CheckSquare, LogOut } from "lucide-react";
+import {
+    Home,
+    Users,
+    School,
+    BookOpen,
+    FileQuestion,
+    LogOut,
+} from "lucide-react";
 import api from "../api";
 
 const AdminSidebar = () => {
     const location = useLocation();
     const navigate = useNavigate();
+    const [userInfo, setUserInfo] = useState({ name: "Admin", identifier: "" });
+
+    useEffect(() => {
+        // Ambil info user dari localStorage atau API
+        const role = localStorage.getItem("role");
+        // Bisa juga fetch dari API jika diperlukan
+    }, []);
+
     const handleLogout = async () => {
         if (!window.confirm("Apakah Anda yakin ingin keluar?")) {
             return;
         }
         try {
-            await api.post(`auth/logout`);
+            await api.post(`/auth/logout`);
             localStorage.removeItem("token");
-            localStorage.removeItem("user"); // Jika Anda menyimpan data pengguna
+            localStorage.removeItem("role");
+            localStorage.removeItem("user");
             navigate("/login");
         } catch (error) {
             console.error("Gagal Logout:", error);
             localStorage.removeItem("token");
+            localStorage.removeItem("role");
             localStorage.removeItem("user");
             navigate("/login");
         }
     };
+
     const navItems = [
         {
             icon: <Home size={20} />,
-            label: "Beranda",
-            to: "/admin", // Ganti 'id' dengan 'to' untuk Link
+            label: "Dashboard",
+            to: "/admin",
         },
         {
-            icon: <Home size={20} />,
+            icon: <Users size={20} />,
             label: "Kelola Pengguna",
-            to: "/admin/users"
+            to: "/admin/users",
         },
         {
-            icon: <BookText size={20} />,
-            label: "Kelola Reading",
-            to: "/admin/reading",
+            icon: <School size={20} />,
+            label: "Kelola Kelas",
+            to: "/admin/classes",
         },
         {
-            icon: <AudioLines size={20} />,
-            label: "Kelola Listening",
-            to: "/admin/listening",
+            icon: <BookOpen size={20} />,
+            label: "Kelola Materi",
+            to: "/admin/materials",
         },
         {
-            icon: <CheckSquare size={20} />,
-            label: "Kelola Ujian",
-            to: "/admin/quizzes",
+            icon: <FileQuestion size={20} />,
+            label: "Kelola Soal",
+            to: "/admin/questions",
         },
     ];
 
@@ -61,47 +79,68 @@ const AdminSidebar = () => {
   };
 
     return (
-      <div className="w-64 bg-white h-screen flex flex-col border-r fixed top-0 left-0 z-10">
-          {/* Logo/Nama Aplikasi */}
-          <div className="p-6 text-xl font-bold text-gray-800">VToeic</div>
+        <div className="w-64 bg-gradient-to-b from-gray-900 to-gray-800 h-screen flex flex-col border-r border-gray-700 fixed top-0 left-0 z-10 shadow-xl">
+            {/* Logo/Nama Aplikasi */}
+            <div className="p-6 border-b border-gray-700">
+                <div className="flex items-center gap-3">
+                    <div className="p-2 bg-blue-600 rounded-lg">
+                        <Home className="text-white" size={20} />
+                    </div>
+                    <div>
+                        <div className="text-xl font-bold text-white">VToeic</div>
+                        <div className="text-xs text-gray-400">Admin Panel</div>
+                    </div>
+                </div>
+            </div>
 
-          {/* Navigasi Utama */}
-          <nav className="flex-grow p-4">
-              {navItems.map((item) => {
-                  // Tentukan apakah item ini aktif
-                  const isActive = getIsActive(item.to);
+            {/* Navigasi Utama */}
+            <nav className="flex-grow p-4 overflow-y-auto">
+                <div className="space-y-1">
+                    {navItems.map((item) => {
+                        const isActive = getIsActive(item.to);
 
-                  return (
-                      // Ganti <div> dengan Link dari react-router-dom
-                      <Link
-                          key={item.to}
-                          to={item.to}
-                          className={`flex items-center p-3 my-1 rounded-lg cursor-pointer transition-colors ${
-                              isActive
-                                  ? "bg-blue-100 text-blue-700 font-semibold"
-                                  : "text-gray-600 hover:bg-gray-50"
-                          }`}
-                      >
-                          {item.icon}
-                          <span className="ml-3">{item.label}</span>
-                      </Link>
-                  );
-              })}
-          </nav>
+                        return (
+                            <Link
+                                key={item.to}
+                                to={item.to}
+                                className={`flex items-center p-3 rounded-lg cursor-pointer transition-all duration-200 ${
+                                    isActive
+                                        ? "bg-blue-600 text-white shadow-lg transform scale-105"
+                                        : "text-gray-300 hover:bg-gray-700 hover:text-white"
+                                }`}
+                            >
+                                <span
+                                    className={`${
+                                        isActive ? "text-white" : "text-gray-400"
+                                    }`}
+                                >
+                                    {item.icon}
+                                </span>
+                                <span className="ml-3 font-medium">{item.label}</span>
+                            </Link>
+                        );
+                    })}
+                </div>
+            </nav>
 
-          {/* Informasi Pengguna & Logout */}
-          <div className="p-4 border-t">
-              <p className="text-sm font-semibold text-gray-800">
-                  Denis Supriyadi
-              </p>
-              <p className="text-xs text-gray-500">12345678</p>
-              <button onClick={handleLogout} className="flex items-center justify-center w-full mt-4 py-2 px-3 text-sm rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors">
-                  <LogOut size={16} className="mr-2" />
-                  Keluar
-              </button>
-          </div>
-      </div>
-  );
+            {/* Informasi Pengguna & Logout */}
+            <div className="p-4 border-t border-gray-700 bg-gray-800">
+                <div className="mb-3">
+                    <p className="text-sm font-semibold text-white">
+                        {userInfo.name}
+                    </p>
+                    <p className="text-xs text-gray-400">{userInfo.identifier}</p>
+                </div>
+                <button
+                    onClick={handleLogout}
+                    className="flex items-center justify-center w-full py-2 px-3 text-sm rounded-lg bg-red-600 text-white hover:bg-red-700 transition-colors font-medium"
+                >
+                    <LogOut size={16} className="mr-2" />
+                    Keluar
+                </button>
+            </div>
+        </div>
+    );
 };
 
 export default AdminSidebar;

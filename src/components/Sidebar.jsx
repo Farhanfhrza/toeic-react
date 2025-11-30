@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Home, BookText, AudioLines, CheckSquare, LogOut } from "lucide-react";
 import api from "../api";
@@ -6,6 +6,24 @@ import api from "../api";
 const Sidebar = () => {
     const location = useLocation();
     const navigate = useNavigate();
+    const [userInfo, setUserInfo] = useState({ name: "", nisn: "" });
+    useEffect(() => {
+        const fetchUserInfo = async () => {
+            try {
+                const res = await api.get("/dashboard");
+                if (res.data.success && res.data.profile) {
+                    setUserInfo({
+                        name: res.data.profile.name || "",
+                        nisn: res.data.profile.nisn || "",
+                    });
+                }
+            } catch (err) {
+                console.error("Error fetching user info:", err);
+            }
+        };
+        fetchUserInfo();
+    }, []);
+
     const handleLogout = async () => {
         if (!window.confirm("Apakah Anda yakin ingin keluar?")) {
             return;
@@ -41,7 +59,7 @@ const Sidebar = () => {
         },
         {
             icon: <CheckSquare size={20} />,
-            label: "Simulasi Ujian",
+            label: "Latihan Soal",
             to: "/quiz",
         },
     ];
@@ -59,7 +77,7 @@ const Sidebar = () => {
             <div className="p-6 text-xl font-bold text-gray-800">VToeic</div>
 
             {/* Navigasi Utama */}
-            <nav className="flex-grow p-4">
+            <nav className="grow p-4">
                 {navItems.map((item) => {
                     // Tentukan apakah item ini aktif
                     const isActive = getIsActive(item.to);
@@ -85,9 +103,9 @@ const Sidebar = () => {
             {/* Informasi Pengguna & Logout */}
             <div className="p-4 border-t">
                 <p className="text-sm font-semibold text-gray-800">
-                    Denis Supriyadi
+                    {userInfo.name || "Loading..."}
                 </p>
-                <p className="text-xs text-gray-500">12345678</p>
+                <p className="text-xs text-gray-500">{userInfo.nisn || "N/A"}</p>
                 <button onClick={handleLogout} className="flex items-center justify-center w-full mt-4 py-2 px-3 text-sm rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors">
                     <LogOut size={16} className="mr-2" />
                     Keluar

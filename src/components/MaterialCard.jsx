@@ -1,10 +1,11 @@
 import React from "react";
 import { CheckCircle, Bookmark } from "lucide-react";
 
-const MaterialCard = ({ title, description, 
-    // isDone, 
+const MaterialCard = ({ title, description, progress, 
     // imageSrc
  }) => {
+    const isCompleted = progress?.is_completed || false;
+
     return (
         <div className="flex items-start bg-white p-4 mb-4 rounded-xl shadow-sm border border-gray-100">
             {/* Gambar Materi */}
@@ -21,16 +22,20 @@ const MaterialCard = ({ title, description,
 
                 {/* Status Penyelesaian */}
                 <div className="flex items-center text-sm">
-                    {/* {isDone ? (
+                    {isCompleted ? (
                         <span className="flex items-center text-green-600 font-medium">
                             <CheckCircle size={16} className="mr-1" />
-                            Done
+                            Selesai
+                        </span>
+                    ) : progress ? (
+                        <span className="text-blue-600 text-xs font-medium bg-blue-50 py-1 px-2 rounded-full">
+                            Sedang dipelajari
                         </span>
                     ) : (
-                        <span className="text-blue-600 text-xs font-medium bg-blue-50 py-1 px-2 rounded-full cursor-pointer hover:bg-blue-100 transition-colors">
-                            Mark as done
+                        <span className="text-gray-500 text-xs font-medium bg-gray-50 py-1 px-2 rounded-full">
+                            Belum dimulai
                         </span>
-                    )} */}
+                    )}
                 </div>
             </div>
 

@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import {
     Home,
     User,
@@ -7,6 +8,7 @@ import {
     Clock,
     Edit,
 } from "lucide-react";
+import api from "../api";
 
 // --- Komponen Pembantu: Header Banner ---
 const HeaderBanner = () => {
@@ -73,16 +75,24 @@ const HeaderBanner = () => {
 };
 
 // --- Komponen Pembantu: Materi Card Kecil ---
-const MaterialStatusCard = ({ title, icon, color }) => {
+const MaterialStatusCard = ({ title, icon, color, total, completed }) => {
+    const percentage = total > 0 ? Math.round((completed / total) * 100) : 0;
+    const IconComponent = icon;
+
     return (
         <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex items-center justify-between h-32">
-            <div className="text-gray-500 text-sm font-semibold">{title}</div>
+            <div>
+                <div className="text-gray-500 text-sm font-semibold mb-2">{title}</div>
+                <div className="text-2xl font-bold text-gray-800">
+                    {completed}/{total}
+                </div>
+                <div className="text-xs text-gray-500 mt-1">{percentage}% selesai</div>
+            </div>
             {/* Placeholder untuk ilustrasi/gambar kecil */}
             <div
                 className={`w-20 h-20 rounded-full bg-blue-50/50 flex items-center justify-center text-4xl text-blue-400`}
             >
-                {/* Placeholder ilustrasi yang digambar */}
-                <BookOpen size={40} />
+                <IconComponent size={40} />
             </div>
         </div>
     );
@@ -90,34 +100,45 @@ const MaterialStatusCard = ({ title, icon, color }) => {
 
 // --- Komponen Utama: Dashboard ---
 const Dashboard = () => {
-    // Data Profil Statis
-    const profile = {
-        name: "Denis Supriyadi",
-        nim: "12345678",
-        jurusan: "Teknik Informatika",
-        kelas: "IF-05",
-        password: "••••••••••••",
-    };
+    const [profile, setProfile] = useState({
+        name: "",
+        nisn: "",
+        jurusan: "",
+        kelas: "",
+    });
+    const [materialStats, setMaterialStats] = useState({
+        listening: { total: 0, completed: 0 },
+        reading: { total: 0, completed: 0 },
+    });
+    const [progressData, setProgressData] = useState([]);
+    const [loading, setLoading] = useState(true);
 
-    // Data Progress
-    const progressData = [
-        {
-            category: "Listening",
-            subchapter: "Everyday Conversations",
-            score: "22/25",
-            completion: "75%",
-            lastAttempt: "Nov 7",
-            color: "blue",
-        },
-        {
-            category: "Reading",
-            subchapter: "Grammar Essentials",
-            score: "23/25",
-            completion: "100%",
-            lastAttempt: "8 Nov",
-            color: "green",
-        },
-    ];
+    useEffect(() => {
+        const fetchDashboardData = async () => {
+            try {
+                const res = await api.get("/dashboard");
+                if (res.data.success) {
+                    setProfile(res.data.profile);
+                    setMaterialStats(res.data.materialStats);
+                    setProgressData(res.data.progressOverview || []);
+                }
+            } catch (err) {
+                console.error("Error fetching dashboard data:", err);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchDashboardData();
+    }, []);
+
+    if (loading) {
+        return (
+            <div className="min-h-screen bg-gray-50 p-8 flex items-center justify-center">
+                <p className="text-gray-600">Memuat data dashboard...</p>
+            </div>
+        );
+    }
 
     return (
         <div className="min-h-screen bg-gray-50 p-8">
@@ -130,9 +151,9 @@ const Dashboard = () => {
                 <div className="col-span-12 lg:col-span-7 bg-white p-6 rounded-xl shadow-md">
                     {/* Detail Nama dan NIM */}
                     <h3 className="text-xl font-semibold text-gray-800">
-                        {profile.name}
+                        {profile.name || "Loading..."}
                     </h3>
-                    <p className="text-gray-500 mb-6">{profile.nim}</p>
+                    <p className="text-gray-500 mb-6">{profile.nisn || "N/A"}</p>
                     <hr className="mb-4" />
 
                     {/* Form Detail */}
@@ -144,7 +165,7 @@ const Dashboard = () => {
                             </label>
                             <div className="flex justify-between items-center border-b border-gray-200 py-1">
                                 <span className="text-gray-700">
-                                    {profile.jurusan}
+                                    {profile.jurusan || "N/A"}
                                 </span>
                             </div>
                         </div>
@@ -156,23 +177,8 @@ const Dashboard = () => {
                             </label>
                             <div className="flex justify-between items-center border-b border-gray-200 py-1">
                                 <span className="text-gray-700">
-                                    {profile.kelas}
+                                    {profile.kelas || "N/A"}
                                 </span>
-                            </div>
-                        </div>
-
-                        {/* Kata Sandi */}
-                        <div>
-                            <label className="block text-sm font-medium text-gray-500">
-                                Kata Sandi
-                            </label>
-                            <div className="flex justify-between items-center border-b border-gray-200 py-1">
-                                <span className="text-gray-700">
-                                    {profile.password}
-                                </span>
-                                <button className="text-gray-400 hover:text-blue-600 transition-colors">
-                                    <Edit size={16} />
-                                </button>
                             </div>
                         </div>
                     </div>
@@ -184,11 +190,15 @@ const Dashboard = () => {
                         title="Listening"
                         icon={Headset}
                         color="blue"
+                        total={materialStats.listening.total}
+                        completed={materialStats.listening.completed}
                     />
                     <MaterialStatusCard
                         title="Reading"
                         icon={BookOpen}
                         color="red"
+                        total={materialStats.reading.total}
+                        completed={materialStats.reading.completed}
                     />
                 </div>
             </div>
@@ -200,58 +210,66 @@ const Dashboard = () => {
                 </h3>
 
                 {/* Tabel */}
-                <div className="overflow-x-auto rounded-xl shadow-md border border-gray-100">
-                    <table className="min-w-full divide-y divide-gray-200">
-                        <thead className="bg-blue-50/50 text-blue-700">
-                            <tr>
-                                <th className="px-6 py-3 text-left text-xs font-bold uppercase tracking-wider">
-                                    Category
-                                </th>
-                                <th className="px-6 py-3 text-left text-xs font-bold uppercase tracking-wider">
-                                    Subchapter
-                                </th>
-                                <th className="px-6 py-3 text-left text-xs font-bold uppercase tracking-wider">
-                                    Score
-                                </th>
-                                <th className="px-6 py-3 text-left text-xs font-bold uppercase tracking-wider">
-                                    Completion
-                                </th>
-                                <th className="px-6 py-3 text-left text-xs font-bold uppercase tracking-wider">
-                                    Last attempt
-                                </th>
-                            </tr>
-                        </thead>
-                        <tbody className="bg-white divide-y divide-gray-200">
-                            {progressData.map((item, index) => (
-                                <tr key={index}>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                                        {item.category}
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                        {item.subchapter}
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                        {item.score}
-                                    </td>
-                                    <td
-                                        className="px-6 py-4 whitespace-nowrap text-sm font-semibold"
-                                        style={{
-                                            color:
-                                                item.completion === "100%"
-                                                    ? "#10B981"
-                                                    : "#2563EB",
-                                        }}
-                                    >
-                                        {item.completion}
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                        {item.lastAttempt}
-                                    </td>
+                {progressData.length > 0 ? (
+                    <div className="overflow-x-auto rounded-xl shadow-md border border-gray-100">
+                        <table className="min-w-full divide-y divide-gray-200">
+                            <thead className="bg-blue-50/50 text-blue-700">
+                                <tr>
+                                    <th className="px-6 py-3 text-left text-xs font-bold uppercase tracking-wider">
+                                        Category
+                                    </th>
+                                    <th className="px-6 py-3 text-left text-xs font-bold uppercase tracking-wider">
+                                        Subchapter
+                                    </th>
+                                    <th className="px-6 py-3 text-left text-xs font-bold uppercase tracking-wider">
+                                        Score
+                                    </th>
+                                    <th className="px-6 py-3 text-left text-xs font-bold uppercase tracking-wider">
+                                        Completion
+                                    </th>
+                                    <th className="px-6 py-3 text-left text-xs font-bold uppercase tracking-wider">
+                                        Last attempt
+                                    </th>
                                 </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
+                            </thead>
+                            <tbody className="bg-white divide-y divide-gray-200">
+                                {progressData.map((item, index) => (
+                                    <tr key={index}>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                            {item.category}
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                            {item.subchapter}
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                            {item.score}
+                                        </td>
+                                        <td
+                                            className="px-6 py-4 whitespace-nowrap text-sm font-semibold"
+                                            style={{
+                                                color:
+                                                    item.completion === "100%"
+                                                        ? "#10B981"
+                                                        : "#2563EB",
+                                            }}
+                                        >
+                                            {item.completion}
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                            {item.lastAttempt}
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                ) : (
+                    <div className="bg-white rounded-xl shadow-md border border-gray-100 p-8 text-center">
+                        <p className="text-gray-500">
+                            Belum ada progress. Mulai kerjakan latihan untuk melihat progress Anda!
+                        </p>
+                    </div>
+                )}
             </div>
         </div>
     );
